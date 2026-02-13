@@ -251,7 +251,7 @@ h1{
   transition: width .25s ease;
 }
 
-/* Detail tabs (Ingredients / Steps / Timer / Nutrition) */
+/* Detail tabs */
 .detail-tabs{
   display:flex;
   gap: 8px;
@@ -260,7 +260,6 @@ h1{
   padding: 6px 2px;
   margin: 0 0 10px;
 }
-
 .detail-tab{
   white-space: nowrap;
   border-radius: 999px;
@@ -276,7 +275,6 @@ h1{
   border-color: rgba(56,189,248,0.25);
 }
 
-/* Panels: on mobile, only show active panel. */
 .detail-panel{ display: none; }
 .detail-panel.active{ display: block; }
 
@@ -284,12 +282,12 @@ h1{
   display: grid;
   gap: 14px;
 }
+
 @media (min-width: 860px){
   .split{
     grid-template-columns: 1fr 1fr;
     align-items: start;
   }
-  /* On desktop, keep your “split view” experience by showing all panels */
   .detail-panel{ display: block; }
   .detail-tabs{ display: none; }
   .recipe-head h2{ font-size: 1.85rem; }
@@ -365,10 +363,56 @@ h1{
   font-weight: 900;
 }
 
-.nutrition-meta{ margin-bottom: 8px; }
-.nutrition .list{ margin-top: 8px; }
+/* Nutrition slider (minimal + matches existing style) */
+.slider-row{
+  margin: 12px 0 8px;
+  padding: 10px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(34,48,70,0.55);
+  background: rgba(8,12,18,0.25);
+}
+.slider-head{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.slider-value{
+  font-weight: 900;
+  color: var(--text);
+}
+.range{
+  width: 100%;
+  appearance: none;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(34,48,70,0.8);
+  background: rgba(8,12,18,0.55);
+  outline: none;
+}
+.range::-webkit-slider-thumb{
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(125,211,252,0.9);
+  border: 2px solid rgba(11,15,20,0.9);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
+.range::-moz-range-thumb{
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(125,211,252,0.9);
+  border: 2px solid rgba(11,15,20,0.9);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
+.range:focus-visible{
+  box-shadow: 0 0 0 3px rgba(125,211,252,0.25);
+  border-color: rgba(125,211,252,0.55);
+}
 
-/* Footer */
 .footer{
   margin-top: 14px;
   text-align: center;
@@ -402,6 +446,11 @@ h1{
     display: none !important;
   }
 
+  /* Keep slider visible? Typically not needed for print, so hide it. */
+  .slider-row{
+    display: none !important;
+  }
+
   .container{
     max-width: none;
     padding: 0;
@@ -416,11 +465,9 @@ h1{
     padding: 16px !important;
   }
 
-  /* Show all panels for printing */
   .detail-panel{ display: block !important; }
   .detail-panel h3{ margin-top: 16px; }
 
-  /* Hide buttons not needed on paper */
   #resetChecks,
   #printRecipe{
     display: none !important;
@@ -436,7 +483,6 @@ h1{
   }
 }
 
-/* Reduce motion accessibility */
 @media (prefers-reduced-motion: reduce){
   *{ transition: none !important; scroll-behavior: auto !important; }
 }

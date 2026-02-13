@@ -23,7 +23,8 @@ function boot() {
     "#timePill", "#skillPill",
     "#progressText", "#progressBar",
     "#printRecipe",
-    "#nutritionList", "#nutritionServings", "#nutritionBatch"
+    "#nutritionList", "#nutritionServings", "#nutritionBatch",
+    "#saucePct", "#saucePctText"
   ];
 
   const missing = required.filter((sel) => !$(sel));
@@ -38,17 +39,19 @@ function boot() {
     lbs: 2,             // 1..6
     units: "US",        // US | Metric
     detailPanel: "ingredients", // ingredients | steps | timer | nutrition
+    saucePct: 100,      // 0..100 (how much sauce is eaten)
     timer: { id: null, endAt: null }
   };
 
   // =========================
-  // Nutrition (est.) — more accurate, ingredient-based
+  // Nutrition (est.) — ingredient-based + sauce eaten slider
   // =========================
   // Serving assumption: 0.5 lb raw wings per serving (2 lb = 4 servings)
-  // Wings nutrition uses "chicken wing, meat+skin, raw" per 100g.
-  // Sauce nutrition uses per-tbsp (or per-1/4 cup) common values.
+  // Wings nutrition uses "chicken wing, meat+skin, raw" per 100g (typical reference values).
+  // Sauce nutrition uses per-tbsp common values.
   //
-  // NOTE: This is still an estimate. Real nutrition varies by wing size, brand, and how much sauce is consumed.
+  // Slider scales SAUCE macros only:
+  // 0% = sauce mostly left behind; 100% = all sauce eaten.
 
   const NUTRITION = {
     // Chicken wing, meat+skin, raw — per 100g
@@ -63,12 +66,11 @@ function boot() {
     brown_sugar_tbsp: { kcal: 34, protein_g: 0.0, fat_g: 0.0 },
     mango_preserves_tbsp: { kcal: 45, protein_g: 0.0, fat_g: 0.0 },
     sweet_chili_tbsp: { kcal: 20, protein_g: 0.0, fat_g: 0.0 },
-    bbq_sauce_tbsp: { kcal: 30, protein_g: 0.0, fat_g: 0.0 }, // 2 tbsp ~ 60 kcal
-    dijon_tbsp: { kcal: 15, protein_g: 0.0, fat_g: 0.0 }, // small; treated as negligible for macro accuracy
-    parmesan_tbsp: { kcal: 27, protein_g: 2.405, fat_g: 1.7875 } // from 1/4 cup = 4 tbsp
+    bbq_sauce_tbsp: { kcal: 30, protein_g: 0.0, fat_g: 0.0 },
+    dijon_tbsp: { kcal: 15, protein_g: 0.0, fat_g: 0.0 },
+    parmesan_tbsp: { kcal: 27, protein_g: 2.405, fat_g: 1.7875 }
   };
 
-  // Helper: compute servings from lbs (0.5 lb per serving)
   function servingsFromLbs(lbs) {
     return Math.max(1, Math.round(lbs * 2));
   }
@@ -95,53 +97,41 @@ function boot() {
     return mulMacro(NUTRITION.wing_raw_100g, factor);
   }
 
-  function tbsp(n) {
-    return n;
-  }
-  function tspToTbsp(nTsp) {
-    return nTsp / 3;
-  }
-  function cupToTbsp(nCups) {
-    return nCups * 16;
-  }
+  function tbsp(n) { return n; }
+  function tspToTbsp(nTsp) { return nTsp / 3; }
+  function cupToTbsp(nCups) { return nCups * 16; }
 
-  // Sauce macros by flavor for a given batch size (lbs)
-  // Uses the recipe amounts at 2 lb and scales by factor (lbs/2)
   function sauceMacroForFlavor(flavorKey, lbs) {
     const f = lbs / 2;
     let total = { kcal: 0, protein_g: 0, fat_g: 0 };
 
     const addTbsp = (macroKey, nTbsp) => {
-      total = addMacro(total, mulMacro(NUTRITION[macroKey], nTbsp));
+      const m = NUTRITION[macroKey];
+      if (!m) return;
+      total = addMacro(total, mulMacro(m, nTbsp));
     };
 
-    // Many optional ingredients are not counted (more conservative + less “fake precision”)
     switch (flavorKey) {
       case "mango":
-        // mango preserves 1/2 cup; soy 1 tbsp; vinegar 1 tbsp
         addTbsp("mango_preserves_tbsp", cupToTbsp(0.5) * f);
         addTbsp("soy_tbsp", tbsp(1) * f);
         addTbsp("rice_vinegar_tbsp", tbsp(1) * f);
         return total;
 
       case "lemonpepper":
-        // butter 3 tbsp
         addTbsp("butter_tbsp", tbsp(3) * f);
         return total;
 
       case "buffalo":
-        // butter 3 tbsp (hot sauce varies widely; omitted for more stable estimate)
         addTbsp("butter_tbsp", tbsp(3) * f);
         return total;
 
       case "garlicparm":
-        // butter 3 tbsp; parmesan 1/3 cup
         addTbsp("butter_tbsp", tbsp(3) * f);
         addTbsp("parmesan_tbsp", cupToTbsp(1/3) * f);
         return total;
 
       case "honeygarlic":
-        // butter 2 tbsp; honey 3 tbsp; soy 1 tbsp; vinegar 1 tsp
         addTbsp("butter_tbsp", tbsp(2) * f);
         addTbsp("honey_tbsp", tbsp(3) * f);
         addTbsp("soy_tbsp", tbsp(1) * f);
@@ -149,24 +139,20 @@ function boot() {
         return total;
 
       case "teriyaki":
-        // soy 3 tbsp; brown sugar 2 tbsp; vinegar 1 tbsp
         addTbsp("soy_tbsp", tbsp(3) * f);
         addTbsp("brown_sugar_tbsp", tbsp(2) * f);
         addTbsp("rice_vinegar_tbsp", tbsp(1) * f);
         return total;
 
       case "cajun":
-        // dry rub (calories negligible)
         return total;
 
       case "bbq":
-        // bbq sauce 1/2 cup; butter optional 1 tbsp (counted as written)
         addTbsp("bbq_sauce_tbsp", cupToTbsp(0.5) * f);
         addTbsp("butter_tbsp", tbsp(1) * f);
         return total;
 
       case "honeymustard":
-        // honey 3 tbsp; dijon 2 tbsp; mayo 1 tbsp; vinegar 1 tsp
         addTbsp("honey_tbsp", tbsp(3) * f);
         addTbsp("dijon_tbsp", tbsp(2) * f);
         addTbsp("mayo_tbsp", tbsp(1) * f);
@@ -174,25 +160,21 @@ function boot() {
         return total;
 
       case "garlicbutter":
-        // butter 4 tbsp
         addTbsp("butter_tbsp", tbsp(4) * f);
         return total;
 
       case "sweetchili":
-        // sweet chili 1/2 cup; soy 1 tbsp
         addTbsp("sweet_chili_tbsp", cupToTbsp(0.5) * f);
         addTbsp("soy_tbsp", tbsp(1) * f);
         return total;
 
       case "cajunhoney":
-        // honey 3 tbsp; butter 2 tbsp; vinegar 1 tsp
         addTbsp("honey_tbsp", tbsp(3) * f);
         addTbsp("butter_tbsp", tbsp(2) * f);
         addTbsp("rice_vinegar_tbsp", tspToTbsp(1) * f);
         return total;
 
       case "chipotlelime":
-        // butter 2 tbsp (optional honey omitted)
         addTbsp("butter_tbsp", tbsp(2) * f);
         return total;
 
@@ -612,19 +594,17 @@ function boot() {
     return (Math.round(num * 2) / 2).toString();
   }
 
-  // --- UI enhancement: progress ---
+  // --- progress ---
   function updateProgress(){
     const total = document.querySelectorAll("#stepsList input[type='checkbox']").length;
     const done = document.querySelectorAll("#stepsList input[type='checkbox']:checked").length;
-
     $("#progressText").textContent = `${done}/${total}`;
-
     const pct = total ? Math.round((done / total) * 100) : 0;
     $("#progressBar").style.width = `${pct}%`;
     $("#progressBar").setAttribute("aria-valuenow", String(pct));
   }
 
-  // --- detail tab switching ---
+  // --- detail tabs ---
   function setDetailPanel(panelKey){
     state.detailPanel = panelKey;
 
@@ -640,19 +620,24 @@ function boot() {
     });
   }
 
-  // --- nutrition rendering (ingredient-based) ---
+  // --- nutrition rendering ---
   function renderNutrition(){
     const servings = servingsFromLbs(state.lbs);
-    const batch = addMacro(
-      wingsMacroForBatch(state.lbs),
-      sauceMacroForFlavor(state.flavorKey, state.lbs)
-    );
+
+    const wingsBatch = wingsMacroForBatch(state.lbs);
+    const sauceBatchFull = sauceMacroForFlavor(state.flavorKey, state.lbs);
+    const sauceFactor = clamp(state.saucePct, 0, 100) / 100;
+    const sauceBatchEaten = mulMacro(sauceBatchFull, sauceFactor);
+
+    const batch = addMacro(wingsBatch, sauceBatchEaten);
     const per = perServingFromBatch(batch, servings);
 
     $("#nutritionServings").textContent = String(servings);
     $("#nutritionBatch").textContent = state.units === "Metric"
       ? `${Math.round(state.lbs * 453.592)} g`
       : `${state.lbs} lb`;
+
+    $("#saucePctText").textContent = String(state.saucePct);
 
     const items = [
       { label: "Calories", value: `${formatNumber(per.kcal)} kcal` },
@@ -937,6 +922,7 @@ function boot() {
     });
   });
 
+  // Steps checks
   $("#stepsList").addEventListener("change", (e) => {
     const cb = e.target.closest("input[type='checkbox']");
     if (!cb) return;
@@ -945,19 +931,23 @@ function boot() {
     updateProgress();
   });
 
+  // Reset
   $("#resetChecks").addEventListener("click", (e) => {
     e.preventDefault();
     console.log("[Wing Lab] Reset checks clicked");
     resetChecks();
   }, { passive: false });
 
+  // Copy list
   $("#copyList").addEventListener("click", copyShoppingList);
 
+  // Units
   $("#toggleUnits").addEventListener("click", () => {
     state.units = state.units === "US" ? "Metric" : "US";
     render();
   });
 
+  // Timer presets
   $$(".preset").forEach(btn => {
     btn.addEventListener("click", () => {
       const min = Number(btn.dataset.min);
@@ -982,9 +972,20 @@ function boot() {
     toast("Timer stopped");
   });
 
+  // Print
   $("#printRecipe").addEventListener("click", (e) => {
     e.preventDefault();
     printRecipe();
+  });
+
+  // Sauce slider (updates nutrition live)
+  const sauceEl = $("#saucePct");
+  sauceEl.value = String(state.saucePct);
+  $("#saucePctText").textContent = String(state.saucePct);
+
+  sauceEl.addEventListener("input", () => {
+    state.saucePct = Number(sauceEl.value);
+    renderNutrition();
   });
 
   // initial state

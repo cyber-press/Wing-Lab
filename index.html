@@ -78,13 +78,11 @@
         </div>
       </div>
 
-      <!-- pills (required by app.js) -->
       <div class="pill-row">
         <span class="pill" id="timePill">⏱ ~45–55 min</span>
         <span class="pill" id="skillPill">🧠 Beginner-friendly</span>
       </div>
 
-      <!-- progress -->
       <div class="progress-row">
         <div class="progress-meta">
           <span class="progress-label">Progress</span>
@@ -95,7 +93,6 @@
         </div>
       </div>
 
-      <!-- Detail tabs: Ingredients / Steps / Timer / Nutrition -->
       <nav class="detail-tabs" aria-label="Recipe details">
         <button class="detail-tab active" type="button" data-panel="ingredients" aria-selected="true">Ingredients</button>
         <button class="detail-tab" type="button" data-panel="steps" aria-selected="false">Steps</button>
@@ -104,7 +101,6 @@
       </nav>
 
       <div class="split detail-panels">
-        <!-- Ingredients panel -->
         <section class="detail-panel active" data-panel="ingredients">
           <h3>Ingredients</h3>
           <ul id="ingredientsList" class="list"></ul>
@@ -116,13 +112,11 @@
           <p class="hint small">Copy includes your selected batch size + flavor ingredients.</p>
         </section>
 
-        <!-- Steps panel -->
         <section class="detail-panel" data-panel="steps">
           <h3>Steps</h3>
           <ol id="stepsList" class="steps"></ol>
         </section>
 
-        <!-- Timer panel -->
         <section class="detail-panel" data-panel="timer">
           <h3>Timer</h3>
 
@@ -149,7 +143,6 @@
           </div>
         </section>
 
-        <!-- Nutrition panel (new) -->
         <section class="detail-panel" data-panel="nutrition">
           <h3>Nutrition (est.)</h3>
 
@@ -162,6 +155,25 @@
                 <strong>Servings:</strong> <span id="nutritionServings">4</span> ·
                 <strong>Batch:</strong> <span id="nutritionBatch">2 lb</span>
               </p>
+            </div>
+
+            <!-- NEW: Sauce amount eaten slider -->
+            <div class="slider-row" role="group" aria-label="Sauce amount eaten">
+              <div class="slider-head">
+                <span class="label">Sauce eaten</span>
+                <span class="slider-value"><span id="saucePctText">100</span>%</span>
+              </div>
+              <input
+                id="saucePct"
+                class="range"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value="100"
+                aria-label="Sauce amount eaten percentage"
+              />
+              <p class="hint small">0% = you leave most sauce behind · 100% = you eat it all.</p>
             </div>
 
             <ul id="nutritionList" class="list"></ul>
