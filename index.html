@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wing Lab — Chicken Wings in Multiple Flavors</title>
+  <meta name="description" content="Mobile-friendly chicken wing recipes with step-by-step instructions." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">🍗</div>
+      <div>
+        <h1>Wing Lab</h1>
+        <p class="sub">Pick a flavor. Follow the steps. Learn by cooking.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="controls card">
+      <div class="row">
+        <label for="method" class="label">Cooking method</label>
+        <select id="method" class="select" aria-label="Cooking method">
+          <option value="bake">Oven (Baked, crispy)</option>
+          <option value="airfry">Air Fryer (fast, crispy)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="servings" class="label">Batch size</label>
+        <div class="stepper">
+          <button id="decServings" class="btn btn-ghost" type="button" aria-label="Decrease batch size">−</button>
+          <span id="servingsLabel" class="stepper-value" aria-live="polite">2 lb</span>
+          <button id="incServings" class="btn btn-ghost" type="button" aria-label="Increase batch size">+</button>
+        </div>
+        <p class="hint">Tip: 2 lb ≈ 18–24 party wings (varies by size).</p>
+      </div>
+
+      <div class="row">
+        <label class="label">Food safety</label>
+        <p class="hint">
+          Cook wings until the thickest part hits <strong>165°F / 74°C</strong>.
+          For crispier skin, many cooks take wings to <strong>175–185°F</strong>.
+        </p>
+      </div>
+    </section>
+
+    <section class="tabs" role="tablist" aria-label="Wing flavors">
+      <button class="tab active" role="tab" aria-selected="true" data-flavor="mango">🥭 Mango</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="lemonpepper">🍋 Lemon Pepper</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="buffalo">🔥 Buffalo</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="garlicparm">🧄 Parmesan</button>
+
+      <button class="tab" role="tab" aria-selected="false" data-flavor="honeygarlic">🍯 Honey Garlic</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="teriyaki">🥢 Teriyaki</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="cajun">🌶️ Cajun Dry Rub</button>
+
+      <button class="tab" role="tab" aria-selected="false" data-flavor="bbq">🍖 BBQ</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="honeymustard">🍯 Honey Mustard</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="garlicbutter">🧈 Garlic Butter</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="sweetchili">🌶️ Sweet Chili</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="cajunhoney">🍯🌶️ Cajun Honey</button>
+      <button class="tab" role="tab" aria-selected="false" data-flavor="chipotlelime">🌮 Chipotle Lime</button>
+    </section>
+
+    <section class="card recipe" id="recipeCard">
+      <div class="recipe-head">
+        <div>
+          <h2 id="recipeTitle">Mango Wings</h2>
+          <p id="recipeDesc" class="sub">Sweet, tangy, lightly spicy glaze.</p>
+        </div>
+
+        <div class="recipe-actions">
+          <button id="printRecipe" class="btn btn-ghost" type="button" aria-label="Print recipe">Print</button>
+          <button id="resetChecks" class="btn btn-ghost" type="button">Reset checks</button>
+        </div>
+      </div>
+
+      <!-- pills (required by app.js) -->
+      <div class="pill-row">
+        <span class="pill" id="timePill">⏱ ~45–55 min</span>
+        <span class="pill" id="skillPill">🧠 Beginner-friendly</span>
+      </div>
+
+      <!-- progress -->
+      <div class="progress-row">
+        <div class="progress-meta">
+          <span class="progress-label">Progress</span>
+          <span id="progressText" class="progress-text">0/0</span>
+        </div>
+        <div class="progress-track" aria-label="Step progress">
+          <div id="progressBar" class="progress-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Detail tabs: Ingredients / Steps / Timer / Nutrition -->
+      <nav class="detail-tabs" aria-label="Recipe details">
+        <button class="detail-tab active" type="button" data-panel="ingredients" aria-selected="true">Ingredients</button>
+        <button class="detail-tab" type="button" data-panel="steps" aria-selected="false">Steps</button>
+        <button class="detail-tab" type="button" data-panel="timer" aria-selected="false">Timer</button>
+        <button class="detail-tab" type="button" data-panel="nutrition" aria-selected="false">Nutrition</button>
+      </nav>
+
+      <div class="split detail-panels">
+        <!-- Ingredients panel -->
+        <section class="detail-panel active" data-panel="ingredients">
+          <h3>Ingredients</h3>
+          <ul id="ingredientsList" class="list"></ul>
+
+          <div class="actions">
+            <button id="copyList" class="btn" type="button">Copy shopping list</button>
+            <button id="toggleUnits" class="btn btn-ghost" type="button" aria-pressed="false">Units: US</button>
+          </div>
+          <p class="hint small">Copy includes your selected batch size + flavor ingredients.</p>
+        </section>
+
+        <!-- Steps panel -->
+        <section class="detail-panel" data-panel="steps">
+          <h3>Steps</h3>
+          <ol id="stepsList" class="steps"></ol>
+        </section>
+
+        <!-- Timer panel -->
+        <section class="detail-panel" data-panel="timer">
+          <h3>Timer</h3>
+
+          <div class="timer card-soft">
+            <div class="timer-row">
+              <div>
+                <p class="label">Quick timer</p>
+                <p class="hint small">Tap a preset or set your own.</p>
+              </div>
+              <div class="timer-controls">
+                <button class="btn btn-ghost preset" type="button" data-min="10">10m</button>
+                <button class="btn btn-ghost preset" type="button" data-min="20">20m</button>
+                <button class="btn btn-ghost preset" type="button" data-min="30">30m</button>
+              </div>
+            </div>
+
+            <div class="timer-row">
+              <input id="customMin" class="input" type="number" min="1" max="120" placeholder="Minutes" aria-label="Custom minutes" />
+              <button id="startTimer" class="btn" type="button">Start</button>
+              <button id="stopTimer" class="btn btn-ghost" type="button">Stop</button>
+            </div>
+
+            <p id="timerReadout" class="timer-readout" aria-live="polite">No timer running.</p>
+          </div>
+        </section>
+
+        <!-- Nutrition panel (new) -->
+        <section class="detail-panel" data-panel="nutrition">
+          <h3>Nutrition (est.)</h3>
+
+          <div class="nutrition card-soft">
+            <div class="nutrition-meta">
+              <p class="hint small">
+                Estimates for learning only. Actual values vary by brand, wing size, and how much sauce is eaten.
+              </p>
+              <p class="hint small">
+                <strong>Servings:</strong> <span id="nutritionServings">4</span> ·
+                <strong>Batch:</strong> <span id="nutritionBatch">2 lb</span>
+              </p>
+            </div>
+
+            <ul id="nutritionList" class="list"></ul>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="card tips">
+      <h3>Wing technique tips (works for every flavor)</h3>
+      <ul class="list">
+        <li><strong>Dry them well:</strong> paper towels = crispier skin.</li>
+        <li><strong>Use baking powder (not soda):</strong> helps crisp skin in the oven.</li>
+        <li><strong>Sauce at the end:</strong> toss hot wings in sauce so they stay crispy.</li>
+        <li><strong>Don’t crowd:</strong> space = airflow = crisp.</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <p class="hint small">Made with simple HTML/CSS/JS. No accounts. No tracking.</p>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
